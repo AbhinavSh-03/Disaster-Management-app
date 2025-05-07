@@ -1,80 +1,86 @@
-import { useState } from "react";
-import { googleSignIn, logout } from "../auth";
+import React, { useState } from "react";
 import styled from "styled-components";
+import bgImage from "../assets/bg1.jpg";
+import { googleSignIn } from "../auth"; // Assuming this is your Firebase Google sign-in function
+import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
+import { useAuth } from "../contexts/AuthContext"; // Import useAuth to access the current user
 
 const Container = styled.div`
+  background-image: url(${bgImage});
+  background-size: cover;
+  background-position: center;
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background-color: rgba(0, 128, 255, 0.285);;
 `;
 
-const Card = styled.div`
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
+const LoginCard = styled.div`
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3rem;
+  border-radius: 20px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   text-align: center;
-  width: 350px;
 `;
 
-const Title = styled.h2`
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
+const Title = styled.h1`
+  margin-bottom: 1rem;
+  font-size: 2.2rem;
+  color: #ffffff;
+`;
+
+const Description = styled.p`
+  margin-bottom: 2rem;
+  font-size: 1.2rem;
+  color: #cccaca;
 `;
 
 const Button = styled.button`
-  padding: 12px;
+  background-color: #0077cc;
+  color: white;
   border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  cursor: pointer;
-  width: 100%;
-  margin-bottom: 12px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
   font-size: 1rem;
-  background-color: ${(props) => props.bgColor || "#007bff"};
-  transition: background 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+  transition: 0.2s ease;
   &:hover {
-    background-color: ${(props) => props.hoverColor || "#0056b3"};
-    transform: scale(1.05);
+    background-color: #0067a3;
   }
 `;
 
-const Message = styled.p`
-  margin-top: 12px;
-  color: green;
-  font-size: 1rem;
-`;
-
 export default function Login() {
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate(); // Initialize navigate for redirection
+  const { user } = useAuth(); // Get the current user from context (if logged in)
 
-  const handleGoogleSignIn = async () => {
-    const googleUser = await googleSignIn();
-    if (googleUser) setUser(googleUser);
+  // This function handles the Google login
+  const handleGoogleLogin = async () => {
+    try {
+      await googleSignIn(); // Sign in using the custom googleSignIn function
+      navigate("/dashboard"); // Redirect to dashboard after successful login
+    } catch (error) {
+      console.error("Login error:", error); // Log any error that occurs
+    }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-  };
+  // If the user is already logged in, redirect them to the dashboard
+  if (user) {
+    navigate("/dashboard");
+  }
 
   return (
     <Container>
-      <Card>
-        <Title>Authentication</Title>
-        <Button bgColor="#ea4335" hoverColor="#c1351d" onClick={handleGoogleSignIn}>
-          Sign in with Google
-        </Button>
-        <Button bgColor="#0ebcbc" hoverColor="#a52a2a" onClick={handleLogout}>
-          Logout
-        </Button>
-        {user && <Message>Logged in as: {user.email}</Message>}
-      </Card>
+      <LoginCard>
+        <Title>Disaster Management Portal</Title>
+        <Description>
+          A crowdsourced platform for real-time disaster reporting, coordination, and aid.
+          Sign in to contribute, report emergencies, or offer help.
+        </Description>
+        <Button onClick={handleGoogleLogin}>Sign in with Google</Button>
+      </LoginCard>
     </Container>
   );
 }
