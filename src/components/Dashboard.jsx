@@ -1,12 +1,16 @@
-import React from "react";
-import { GoogleMap, LoadScript, MarkerF } from "@react-google-maps/api";
+import React, { useState, useEffect } from "react";
+import { GoogleMap, LoadScript, MarkerF, InfoWindow } from "@react-google-maps/api";
 import styled from "styled-components";
-import { useAuth } from "../contexts/AuthContext"; // Import the useAuth hook to handle logout
+import { useAuth } from "../contexts/AuthContext";
+import { db } from "../firebaseConfig";  // Assuming the firebase config is exported here
+import { collection, getDocs } from "firebase/firestore";
 
 // Styled components
 const Container = styled.div`
   text-align: center;
   padding: 20px;
+  height: calc(100vh - 80px);  /* Adjust for the navbar height */
+  overflow-y: auto; /* Enable scrolling */
 `;
 
 const Title = styled.h1`
@@ -29,7 +33,7 @@ const LogoutButton = styled.button`
   right: 20px;
   padding: 10px 20px;
   font-size: 16px;
-  background-color: #f44336;
+  background-color: #000000;
   color: white;
   border: none;
   border-radius: 5px;
@@ -47,7 +51,29 @@ const center = {
 
 const Dashboard = () => {
   const { logout } = useAuth(); // Use the logout function from the AuthContext
+  const [incidents, setIncidents] = useState([]);  // State to store incidents
+  const [selectedIncident, setSelectedIncident] = useState(null);  // Store the incident selected by the user
 
+  // Fetch incidents from Firestore
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "incidents"));
+        const incidentsArray = [];
+        querySnapshot.forEach((doc) => {
+          incidentsArray.push({ id: doc.id, ...doc.data() });
+        });
+        setIncidents(incidentsArray);
+        console.log("Fetched incidents: ", incidentsArray);  // Log incidents to debug
+      } catch (error) {
+        console.error("Error fetching incidents: ", error);
+      }
+    };
+
+    fetchIncidents();
+  }, []);
+
+  // Handle logout
   const handleLogout = async () => {
     try {
       await logout(); // Call the logout function from your AuthContext
@@ -68,7 +94,36 @@ const Dashboard = () => {
             center={center}
             zoom={10}
           >
-            <MarkerF position={center} />
+            {/* Add a Marker for each incident */}
+            {incidents.map((incident) => (
+              <MarkerF
+                key={incident.id}
+                position={{ lat: incident.location.lat, lng: incident.location.lng }}
+                onClick={() => {
+                  console.log("Incident clicked:", incident);  // Log incident on click
+                  setSelectedIncident(incident);
+                }}  
+              />
+            ))}
+
+            {/* Display InfoWindow if an incident is selected */}
+            {selectedIncident && (
+              <InfoWindow
+                position={{
+                  lat: selectedIncident.location.lat,
+                  lng: selectedIncident.location.lng,
+                }}
+                onCloseClick={() => setSelectedIncident(null)}  // Close InfoWindow on click
+              >
+                <div style={{ backgroundColor: '#333', color: 'white', padding: '10px', borderRadius: '8px' }}>
+                  <h3>{selectedIncident.title}</h3>
+                  <p>{selectedIncident.description}</p>
+                  {selectedIncident.imageUrl && selectedIncident.imageUrl !== "" && (
+                    <img src={selectedIncident.imageUrl} alt="incident" style={{ width: '100%', borderRadius: '8px' }} />
+                  )}
+                </div>
+              </InfoWindow>
+            )}
           </GoogleMap>
         </LoadScript>
       </MapWrapper>

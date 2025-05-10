@@ -2,11 +2,20 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import './App.css';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import ReportIncident from './components/ReportIncident'; // Assuming you have this component
+import Navbar from './components/NavBar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+  return user ? (
+    <>
+      <Navbar />
+      <div style={{ paddingTop: '80px' }}>{children}</div>
+    </>
+  ) : (
+    <Navigate to="/login" />
+  );
 }
 
 function App() {
@@ -20,6 +29,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/report"
+            element={
+              <PrivateRoute>
+                <ReportIncident />
               </PrivateRoute>
             }
           />
