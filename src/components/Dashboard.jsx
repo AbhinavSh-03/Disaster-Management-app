@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, MarkerF, InfoWindow } from "@react-google-maps/api";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
-import { db } from "../firebaseConfig";  // Assuming the firebase config is exported here
+import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
 
-// Styled components
 const Container = styled.div`
   text-align: center;
   padding: 20px;
-  height: calc(100vh - 80px);  /* Adjust for the navbar height */
-  overflow-y: auto; /* Enable scrolling */
+  height: calc(100vh - 80px);
+  overflow-y: auto;
 `;
 
 const Title = styled.h1`
@@ -50,11 +49,10 @@ const center = {
 };
 
 const Dashboard = () => {
-  const { logout } = useAuth(); // Use the logout function from the AuthContext
-  const [incidents, setIncidents] = useState([]);  // State to store incidents
-  const [selectedIncident, setSelectedIncident] = useState(null);  // Store the incident selected by the user
+  const { logout } = useAuth();
+  const [incidents, setIncidents] = useState([]);
+  const [selectedIncident, setSelectedIncident] = useState(null);
 
-  // Fetch incidents from Firestore
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
@@ -64,7 +62,6 @@ const Dashboard = () => {
           incidentsArray.push({ id: doc.id, ...doc.data() });
         });
         setIncidents(incidentsArray);
-        console.log("Fetched incidents: ", incidentsArray);  // Log incidents to debug
       } catch (error) {
         console.error("Error fetching incidents: ", error);
       }
@@ -73,11 +70,10 @@ const Dashboard = () => {
     fetchIncidents();
   }, []);
 
-  // Handle logout
   const handleLogout = async () => {
     try {
-      await logout(); // Call the logout function from your AuthContext
-      window.location.href = "/login"; // Redirect to the login page
+      await logout();
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed", error);
     }
@@ -94,32 +90,51 @@ const Dashboard = () => {
             center={center}
             zoom={10}
           >
-            {/* Add a Marker for each incident */}
             {incidents.map((incident) => (
               <MarkerF
                 key={incident.id}
                 position={{ lat: incident.location.lat, lng: incident.location.lng }}
-                onClick={() => {
-                  console.log("Incident clicked:", incident);  // Log incident on click
-                  setSelectedIncident(incident);
-                }}  
+                onClick={() => setSelectedIncident(incident)}
               />
             ))}
 
-            {/* Display InfoWindow if an incident is selected */}
             {selectedIncident && (
               <InfoWindow
                 position={{
                   lat: selectedIncident.location.lat,
                   lng: selectedIncident.location.lng,
                 }}
-                onCloseClick={() => setSelectedIncident(null)}  // Close InfoWindow on click
+                onCloseClick={() => setSelectedIncident(null)}
               >
-                <div style={{ backgroundColor: '#333', color: 'white', padding: '10px', borderRadius: '8px' }}>
-                  <h3>{selectedIncident.title}</h3>
-                  <p>{selectedIncident.description}</p>
+                <div style={{ backgroundColor: "#333", color: "white", padding: "10px", borderRadius: "8px", maxWidth: "220px" }}>
+                  <h3 style={{ marginBottom: "6px" }}>{selectedIncident.title}</h3>
+                  <p style={{ fontSize: "0.85rem", margin: "0 0 6px" }}>{selectedIncident.description}</p>
+                  {selectedIncident.status && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 8px",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        borderRadius: "10px",
+                        marginBottom: "6px",
+                        backgroundColor:
+                          selectedIncident.status === "Resolved"
+                            ? "#2e7d32"
+                            : selectedIncident.status === "In Progress"
+                            ? "#0288d1"
+                            : "#f57c00",
+                      }}
+                    >
+                      {selectedIncident.status}
+                    </span>
+                  )}
                   {selectedIncident.imageUrl && selectedIncident.imageUrl !== "" && (
-                    <img src={selectedIncident.imageUrl} alt="incident" style={{ width: '100%', borderRadius: '8px' }} />
+                    <img
+                      src={selectedIncident.imageUrl}
+                      alt="incident"
+                      style={{ width: "100%", borderRadius: "6px", marginTop: "6px" }}
+                    />
                   )}
                 </div>
               </InfoWindow>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import bgImage from "../assets/bg1.jpg";
 import { googleSignIn } from "../auth"; // Assuming this is your Firebase Google sign-in function
@@ -54,22 +54,32 @@ const Button = styled.button`
 
 export default function Login() {
   const navigate = useNavigate(); // Initialize navigate for redirection
-  const { user } = useAuth(); // Get the current user from context (if logged in)
+  const { currentUser, userRole } = useAuth(); // Get the current user and user role from context
 
   // This function handles the Google login
   const handleGoogleLogin = async () => {
     try {
       await googleSignIn(); // Sign in using the custom googleSignIn function
-      navigate("/dashboard"); // Redirect to dashboard after successful login
+      if (userRole === "admin") {
+        navigate("/admin-reports"); // Redirect to admin dashboard if the user is admin
+      } else {
+        navigate("/dashboard"); // Redirect to regular dashboard if the user is a normal user
+      }
     } catch (error) {
       console.error("Login error:", error); // Log any error that occurs
     }
   };
 
-  // If the user is already logged in, redirect them to the dashboard
-  if (user) {
-    navigate("/dashboard");
-  }
+  // If the user is already logged in, redirect them based on their role
+  useEffect(() => {
+    if (currentUser && userRole) {
+      if (userRole === "admin") {
+        navigate("/admin-reports");
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [currentUser, userRole, navigate]);
 
   return (
     <Container>

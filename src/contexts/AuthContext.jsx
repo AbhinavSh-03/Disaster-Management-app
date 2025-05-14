@@ -1,36 +1,54 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { auth } from "../firebaseConfig"; // Correctly import Firebase auth
-import { onAuthStateChanged, signOut } from "firebase/auth"; // Firebase Auth functions
+import { auth } from "../firebaseConfig";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
-// Create the AuthContext
 const AuthContext = createContext();
 
-// Custom hook to access the AuthContext
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// AuthProvider to wrap the app and provide user context
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // State to store the authenticated user
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true); // To prevent premature renders
 
-  // Listen for authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // Update the user state whenever auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            setUserRole(data.role || "user"); // Default to 'user' if role not defined
+          } else {
+            console.warn("No user document found in Firestore.");
+            setUserRole("user");
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+          setUserRole("user");
+        }
+      } else {
+        setCurrentUser(null);
+        setUserRole(null);
+      }
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Clean up the listener on unmount
-  }, []); // Empty dependency array, so this runs only once on mount
+    return () => unsubscribe();
+  }, []);
 
-  // Logout function
   const logout = async () => {
-    await signOut(auth); // Sign out the user
+    await signOut(auth);
   };
 
-  // Provide user and logout function to children
   return (
-    <AuthContext.Provider value={{ user, logout }}>
+    <AuthContext.Provider value={{ currentUser, userRole, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

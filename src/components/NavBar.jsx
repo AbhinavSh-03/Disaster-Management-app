@@ -71,7 +71,7 @@ const NavButton = styled.button`
 `;
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { currentUser, userRole, logout } = useAuth(); // Now includes userRole
 
   const handleLogout = async () => {
     try {
@@ -87,11 +87,14 @@ const Navbar = () => {
         <LogoImage src={logoImg} alt="Logo" />
         <LogoText>Disaster Portal</LogoText>
       </LogoContainer>
-      {user && (
+      {currentUser && (
         <NavLinks>
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/report">Report Incident</NavLink>
           <NavLink to="/my-reports">My Reports</NavLink>
+          {userRole === "admin" && (
+            <NavLink to="/admin-reports">Admin Control</NavLink>
+          )}
           <NavLink to="/about">About</NavLink>
           <NavButton onClick={handleLogout}>Logout</NavButton>
         </NavLinks>

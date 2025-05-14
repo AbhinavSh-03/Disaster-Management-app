@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useAuth } from "../contexts/AuthContext";
 import { GoogleMap, LoadScript, MarkerF } from "@react-google-maps/api";
-import { db, storage } from "../firebaseConfig"; // Adjust path as needed
+import { db, storage } from "../firebaseConfig"; 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -9,7 +10,7 @@ const Container = styled.div`
   max-width: 800px;
   margin: 100px auto 40px;
   padding: 2rem;
-  background: #6a6767;
+  background: #484646;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 `;
@@ -94,6 +95,8 @@ const ReportIncident = () => {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const { currentUser } = useAuth();  // Ensure currentUser is available
+
   const handleMapClick = (e) => {
     setLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() });
   };
@@ -107,22 +110,31 @@ const ReportIncident = () => {
       return;
     }
 
+    if (!currentUser) {
+      setMessage("You must be logged in to report an incident.");
+      return;
+    }
+
     setSubmitting(true);
     let imageUrl = "";
 
     try {
+      // Handle image upload if available
       if (image) {
         const imageRef = ref(storage, `incidentImages/${Date.now()}_${image.name}`);
         await uploadBytes(imageRef, image);
         imageUrl = await getDownloadURL(imageRef);
       }
 
+      // Save the report to Firestore
       await addDoc(collection(db, "incidents"), {
         title,
         description,
         location,
         imageUrl,
         timestamp: serverTimestamp(),
+        userId: currentUser.uid,  // Store user ID
+        status: "Pending",
       });
 
       setMessage("Incident reported successfully!");
