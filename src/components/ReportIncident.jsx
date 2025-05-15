@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { GoogleMap, LoadScript, MarkerF } from "@react-google-maps/api";
 import { db, storage } from "../firebaseConfig"; 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const Container = styled.div`
   max-width: 800px;
@@ -95,7 +95,8 @@ const ReportIncident = () => {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const { currentUser } = useAuth();  // Ensure currentUser is available
+  const { currentUser } = useAuth();
+  const storage = getStorage(); // Use getStorage() here
 
   const handleMapClick = (e) => {
     setLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() });
@@ -119,21 +120,19 @@ const ReportIncident = () => {
     let imageUrl = "";
 
     try {
-      // Handle image upload if available
       if (image) {
         const imageRef = ref(storage, `incidentImages/${Date.now()}_${image.name}`);
-        await uploadBytes(imageRef, image);
-        imageUrl = await getDownloadURL(imageRef);
+        const snapshot = await uploadBytes(imageRef, image);
+        imageUrl = await getDownloadURL(snapshot.ref);
       }
 
-      // Save the report to Firestore
       await addDoc(collection(db, "incidents"), {
         title,
         description,
         location,
         imageUrl,
         timestamp: serverTimestamp(),
-        userId: currentUser.uid,  // Store user ID
+        userId: currentUser.uid,
         status: "Pending",
       });
 
@@ -197,7 +196,7 @@ const ReportIncident = () => {
         {image && (
           <>
             <ImagePreview src={URL.createObjectURL(image)} alt="Preview" />
-            <RemoveImageBtn onClick={() => setImage(null)}>Remove Image</RemoveImageBtn>
+            <RemoveImageBtn type="button" onClick={() => setImage(null)}>Remove Image</RemoveImageBtn>
           </>
         )}
 
