@@ -5,7 +5,8 @@ import Dashboard from './components/Dashboard';
 import ReportIncident from './components/ReportIncident';
 import Navbar from './components/NavBar';
 import MyReports from './components/MyReports';
-import AdminReports from './components/AdminReports';  // Assuming you have this component
+import AdminReports from './components/AdminReports';
+import About from './components/About';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Wrapper to protect routes for regular users
@@ -41,7 +42,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
-          {/* Regular User Route */}
+          {/* Regular User Routes */}
           <Route
             path="/dashboard"
             element={
@@ -78,6 +79,9 @@ function App() {
               </AdminRoute>
             }
           />
+
+          {/* Public Route */}
+          <Route path="/about" element={<><Navbar /><div style={{ paddingTop: '80px' }}><About /></div></>} />
 
           {/* Redirect unknown paths to dashboard */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
