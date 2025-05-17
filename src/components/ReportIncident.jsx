@@ -2,45 +2,72 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
 import { GoogleMap, LoadScript, MarkerF } from "@react-google-maps/api";
-import { db, storage } from "../firebaseConfig"; 
+import { db, storage } from "../firebaseConfig";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+// Styled Components
+const PageWrapper = styled.div`
+
+  background: linear-gradient(to left, #b2dfdb 0%, #e0f2f1 40%, #ffffff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
 const Container = styled.div`
   max-width: 800px;
   margin: 100px auto 40px;
   padding: 2rem;
-  background: #484646;
+  background: #f9f9f9;
+  border: 2px solid #ccc;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 `;
 
 const Title = styled.h2`
-  margin-bottom: 1rem;
-  color: #00aaff;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  color: #0077cc;
+  text-align: center;
 `;
 
 const Label = styled.label`
   display: block;
   margin-top: 1rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
+  padding: 0.6rem;
+  margin-top: 0.3rem;
   border-radius: 8px;
   border: 1px solid #ccc;
+  background: #fff;
+  color: #333;
+  font-size: 1rem;
+  &:focus {
+    border-color: #0077cc;
+    outline: none;
+  }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
+  padding: 0.6rem;
+  margin-top: 0.3rem;
   border-radius: 8px;
   border: 1px solid #ccc;
   resize: vertical;
+  background: #fff;
+  color: #333;
+  font-size: 1rem;
+  &:focus {
+    border-color: #0077cc;
+    outline: none;
+  }
 `;
 
 const SubmitButton = styled.button`
@@ -51,7 +78,9 @@ const SubmitButton = styled.button`
   border: none;
   border-radius: 10px;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s ease;
   &:hover {
     background-color: #005fa3;
   }
@@ -61,6 +90,8 @@ const MapContainer = styled.div`
   width: 100%;
   height: 300px;
   margin-top: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
 `;
 
 const ImagePreview = styled.img`
@@ -76,15 +107,17 @@ const RemoveImageBtn = styled.button`
   background-color: #e53935;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
+  font-weight: 500;
 `;
 
 const Message = styled.p`
   margin-top: 1rem;
-  color: ${(props) => (props.error ? "red" : "green")};
+  font-weight: 500;
+  color: ${(props) => (props.error ? "#e53935" : "#2e7d32")};
 `;
 
 const ReportIncident = () => {
@@ -96,7 +129,7 @@ const ReportIncident = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const { currentUser } = useAuth();
-  const storage = getStorage(); // Use getStorage() here
+  const storage = getStorage();
 
   const handleMapClick = (e) => {
     setLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() });
@@ -150,6 +183,7 @@ const ReportIncident = () => {
   };
 
   return (
+  <PageWrapper>
     <Container>
       <Title>Report a Disaster Incident</Title>
       {message && <Message error={message.includes("Error")}>{message}</Message>}
@@ -196,7 +230,9 @@ const ReportIncident = () => {
         {image && (
           <>
             <ImagePreview src={URL.createObjectURL(image)} alt="Preview" />
-            <RemoveImageBtn type="button" onClick={() => setImage(null)}>Remove Image</RemoveImageBtn>
+            <RemoveImageBtn type="button" onClick={() => setImage(null)}>
+              Remove Image
+            </RemoveImageBtn>
           </>
         )}
 
@@ -205,6 +241,7 @@ const ReportIncident = () => {
         </SubmitButton>
       </form>
     </Container>
+  </PageWrapper>    
   );
 };
 
