@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   X,
+  Heart,
 } from "lucide-react";
 
 // Styled components
@@ -157,6 +158,12 @@ const Navbar = () => {
           <NavLink to="/my-reports" active={isActive("/my-reports")}>
             <ListChecks size={18} />
             My Reports
+          </NavLink>
+
+          {/* New Donation Campaigns tab */}
+          <NavLink to="/donation-campaigns" active={isActive("/donation-campaigns")}>
+            <Heart size={18} />
+            Donations
           </NavLink>
 
           {userRole === "admin" && (

@@ -7,6 +7,7 @@ import Navbar from './components/NavBar';
 import MyReports from './components/MyReports';
 import AdminReports from './components/AdminReports';
 import About from './components/About';
+import DonationCampaigns from './components/DonationCampaigns'; // new Donations page
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Wrapper to protect routes for regular users
@@ -70,6 +71,16 @@ function App() {
             }
           />
 
+          {/* New Donations Route */}
+          <Route
+            path="/donation-campaigns"
+            element={
+              <PrivateRoute>
+                <DonationCampaigns />
+              </PrivateRoute>
+            }
+          />
+
           {/* Admin Route */}
           <Route
             path="/admin-reports"
@@ -81,7 +92,17 @@ function App() {
           />
 
           {/* Public Route */}
-          <Route path="/about" element={<><Navbar /><div style={{ paddingTop: '80px' }}><About /></div></>} />
+          <Route
+            path="/about"
+            element={
+              <>
+                <Navbar />
+                <div style={{ paddingTop: '80px' }}>
+                  <About />
+                </div>
+              </>
+            }
+          />
 
           {/* Redirect unknown paths to dashboard */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, addDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
@@ -40,11 +40,33 @@ const StatusSelect = styled.select`
   border: 1px solid #aaa;
 `;
 
+const DonationButton = styled.button`
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  &:hover {
+    background-color: #005fa3;
+  }
+`;
+
+const DonationActiveLabel = styled.p`
+  margin-top: 10px;
+  color: #2e7d32;
+  font-weight: 600;
+`;
+
 const AdminReports = () => {
   const { currentUser } = useAuth();
   const [reports, setReports] = useState([]);
 
-  const isAdmin = currentUser.email === "sab027957@gmail.com";
+  // Simple admin check (replace with more secure logic as needed)
+  const isAdmin = currentUser?.email === "sab027957@gmail.com";
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -56,13 +78,49 @@ const AdminReports = () => {
   }, []);
 
   const updateStatus = async (id, status) => {
-    await updateDoc(doc(db, "incidents", id), { status });
-    setReports((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    );
+    try {
+      await updateDoc(doc(db, "incidents", id), { status });
+      setReports((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      );
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
   };
 
-  if (!isAdmin) return <Container><p>Access denied. Admins only.</p></Container>;
+  const enableDonationCampaign = async (incidentId) => {
+    try {
+      // Update incident to mark donation campaign enabled
+      await updateDoc(doc(db, "incidents", incidentId), {
+        hasDonationCampaign: true,
+      });
+
+      // Create a new donation campaign document
+      await addDoc(collection(db, "donations"), {
+        incidentId,
+        goalAmount: 10000, // default goal amount; can be updated later via UI
+        collectedAmount: 0,
+        createdAt: new Date(),
+        createdBy: currentUser.uid,
+      });
+
+      // Update local state to reflect change
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === incidentId ? { ...r, hasDonationCampaign: true } : r
+        )
+      );
+    } catch (error) {
+      console.error("Error enabling donation campaign:", error);
+    }
+  };
+
+  if (!isAdmin)
+    return (
+      <Container>
+        <p>Access denied. Admins only.</p>
+      </Container>
+    );
 
   return (
     <Container>
@@ -71,6 +129,7 @@ const AdminReports = () => {
         <ReportCard key={report.id}>
           <ReportTitle>{report.title}</ReportTitle>
           <Description>{report.description}</Description>
+
           <StatusSelect
             value={report.status || "Pending"}
             onChange={(e) => updateStatus(report.id, e.target.value)}
@@ -79,6 +138,16 @@ const AdminReports = () => {
             <option value="In Progress">In Progress</option>
             <option value="Resolved">Resolved</option>
           </StatusSelect>
+
+          {!report.hasDonationCampaign ? (
+            <DonationButton
+              onClick={() => enableDonationCampaign(report.id)}
+            >
+              Enable Donation Campaign
+            </DonationButton>
+          ) : (
+            <DonationActiveLabel>Donation Campaign Active</DonationActiveLabel>
+          )}
         </ReportCard>
       ))}
     </Container>

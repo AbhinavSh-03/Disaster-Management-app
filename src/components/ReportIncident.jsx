@@ -167,6 +167,7 @@ const ReportIncident = () => {
         timestamp: serverTimestamp(),
         userId: currentUser.uid,
         status: "Pending",
+        hasDonationCampaign: false, // New field to track donation eligibility
       });
 
       setMessage("Incident reported successfully!");
