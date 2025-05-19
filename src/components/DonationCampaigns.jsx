@@ -1,63 +1,131 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import DonImage from "../assets/donat.jpg";
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const Container = styled.div`
-  max-width: 900px;
-  margin: 80px auto;
-  padding: 1rem;
+  max-width: 1920px;
+  margin: 0;
+  padding: 80px 24px;
+  min-height: 100vh;
+  background-color: #f8fafc;
+
+  background-image: 
+    radial-gradient(
+      circle at top right,
+      rgba(48, 255, 245, 0.25) 0%,
+      rgba(32, 178, 170, 0.15) 20%,
+      rgba(32, 178, 170, 0.05) 40%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(32, 178, 170, 0.25) 0%,
+      rgba(32, 178, 170, 0.15) 20%,
+      rgba(32, 178, 170, 0.05) 40%,
+      transparent 60%
+    );
+
+  background-repeat: no-repeat;
+  background-size: 50% 50%, 50% 50%;
+  background-position: top right, bottom left;
 `;
 
 const Title = styled.h2`
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: #0077cc;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #005fa3;
+  text-align: center;
+`;
+
+// New grid container for cards
+const CampaignGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);  // 3 columns on desktop
+  gap: 2rem;
+  justify-items: center;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;  // 1 column on mobile/tablet
+  }
 `;
 
 const CampaignCard = styled.div`
-  background: #fff;
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 3px 8px rgb(0 0 0 / 0.1);
+  background-color: #f8fafc;
+
+  background-image: 
+    radial-gradient(
+      circle at top right,
+      rgba(48, 255, 245, 0.25) 0%,
+      rgba(32, 178, 170, 0.15) 20%,
+      rgba(32, 178, 170, 0.05) 40%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(32, 178, 170, 0.25) 0%,
+      rgba(32, 178, 170, 0.15) 20%,
+      rgba(32, 178, 170, 0.05) 40%,
+      transparent 60%
+    );
+
+  background-repeat: no-repeat;
+  background-size: 50% 50%, 50% 50%;
+  background-position: top right, bottom left;
+  width: 100%;
+  border: 2px solid rgba(4, 71, 68, 0.05);
+  max-width: 500px;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   display: flex;
-  gap: 1.5rem;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
 `;
 
 const CampaignImage = styled.img`
-  width: 150px;
-  height: 100px;
+  width: 250px;
+  height: 150px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 14px;
+  margin-bottom: 1rem;
 `;
 
 const CampaignInfo = styled.div`
-  flex-grow: 1;
+  width: 100%;
 `;
 
 const CampaignTitle = styled.h3`
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.75rem;
   color: #004a99;
+  font-size: 1.6rem;
 `;
 
 const CampaignDescription = styled.p`
-  margin: 0 0 0.75rem;
-  color: #333;
-  font-size: 0.95rem;
+  margin: 0 0 1.25rem;
+  color: #444;
+  font-size: 1.05rem;
+  line-height: 1.6;
 `;
 
 const DonateButton = styled.button`
   background-color: #0077cc;
   color: white;
   border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
+
   &:hover {
     background-color: #005fa3;
   }
@@ -82,6 +150,7 @@ const ModalBox = styled.div`
   max-width: 400px;
   width: 90%;
   text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 `;
 
 const Input = styled.input`
@@ -117,6 +186,8 @@ const ConfirmButton = styled.button`
   font-weight: 600;
   cursor: pointer;
 `;
+
+
 
 const DonationCampaigns = () => {
     const [campaigns, setCampaigns] = useState([]);
@@ -201,43 +272,58 @@ const DonationCampaigns = () => {
     if (campaigns.length === 0)
         return <Container>No active donation campaigns available.</Container>;
 
-    return (
-        <Container>
-            <Title>Active Donation Campaigns</Title>
-            {campaigns.map((campaign) => (
-                <CampaignCard key={campaign.id}>
-                    <CampaignImage
-                        src={campaign.imageUrl || "https://via.placeholder.com/150x100?text=No+Image"}
-                        alt={campaign.title}
-                    />
-                    <CampaignInfo>
-                        <CampaignTitle>{campaign.title}</CampaignTitle>
-                        <CampaignDescription>{campaign.description}</CampaignDescription>
-                        <DonateButton onClick={() => handleDonateClick(campaign)}>Donate</DonateButton>
-                    </CampaignInfo>
-                </CampaignCard>
-            ))}
+return (
+  <Container>
+    <Title>Active Donation Campaigns</Title>
 
-            {selectedCampaign && (
-                <ModalOverlay>
-                    <ModalBox>
-                        <h3>Enter Donation Amount</h3>
-                        <Input
-                            type="number"
-                            placeholder="e.g. 100"
-                            value={donationAmount}
-                            onChange={(e) => setDonationAmount(e.target.value)}
-                            min="1"
-                        />
-                        <ModalActions>
-                            <CancelButton onClick={() => setSelectedCampaign(null)}>Cancel</CancelButton>
-                            <ConfirmButton onClick={handlePayment}>Donate</ConfirmButton>
-                        </ModalActions>
-                    </ModalBox>
-                </ModalOverlay>
-            )}
-        </Container>
-    );
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+        gap: "2rem",
+        justifyItems: "center",
+      }}
+    >
+      {campaigns.map((campaign) => (
+        <CampaignCard key={campaign.id}>
+          <CampaignImage
+            src={campaign.imageUrl ? campaign.imageUrl : DonImage}
+            alt={campaign.title}
+          />
+          <CampaignInfo>
+            <CampaignTitle>{campaign.title}</CampaignTitle>
+            <CampaignDescription>{campaign.description}</CampaignDescription>
+            <DonateButton onClick={() => handleDonateClick(campaign)}>
+              Donate
+            </DonateButton>
+          </CampaignInfo>
+        </CampaignCard>
+      ))}
+    </div>
+
+    {selectedCampaign && (
+      <ModalOverlay>
+        <ModalBox>
+          <h3>Enter Donation Amount</h3>
+          <Input
+            type="number"
+            placeholder="e.g. 100"
+            value={donationAmount}
+            onChange={(e) => setDonationAmount(e.target.value)}
+            min="1"
+          />
+          <ModalActions>
+            <CancelButton onClick={() => setSelectedCampaign(null)}>
+              Cancel
+            </CancelButton>
+            <ConfirmButton onClick={handlePayment}>Donate</ConfirmButton>
+          </ModalActions>
+        </ModalBox>
+      </ModalOverlay>
+    )}
+  </Container>
+);
+
 };
 
 export default DonationCampaigns;
