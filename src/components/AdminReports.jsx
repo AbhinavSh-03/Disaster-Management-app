@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, updateDoc, doc, addDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  addDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const Container = styled.div`
   max-width: 1000px;
@@ -22,6 +30,7 @@ const ReportCard = styled.div`
   padding: 1rem;
   margin-bottom: 1.5rem;
   background: #fff;
+  position: relative;
 `;
 
 const ReportTitle = styled.h3`
@@ -40,18 +49,19 @@ const StatusSelect = styled.select`
   border: 1px solid #aaa;
 `;
 
-const DonationButton = styled.button`
+const Button = styled.button`
   margin-top: 10px;
   padding: 6px 12px;
-  background-color: #0077cc;
+  background-color: ${({ danger }) => (danger ? "#e53935" : "#0077cc")};
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  transition: background-color 0.2s ease;
+  margin-right: 10px;
+  transition: all 0.2s ease;
   &:hover {
-    background-color: #005fa3;
+    background-color: ${({ danger }) => (danger ? "#c62828" : "#005fa3")};
   }
 `;
 
@@ -61,11 +71,29 @@ const DonationActiveLabel = styled.p`
   font-weight: 600;
 `;
 
+const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ConfirmBox = styled.div`
+  background: white;
+  color: black;
+  padding: 1.5rem;
+  border-radius: 10px;
+  max-width: 400px;
+  text-align: center;
+`;
+
 const AdminReports = () => {
   const { currentUser } = useAuth();
   const [reports, setReports] = useState([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  // Simple admin check (replace with more secure logic as needed)
   const isAdmin = currentUser?.email === "sab027957@gmail.com";
 
   useEffect(() => {
@@ -84,43 +112,50 @@ const AdminReports = () => {
         prev.map((r) => (r.id === id ? { ...r, status } : r))
       );
     } catch (error) {
-      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
     }
   };
 
   const enableDonationCampaign = async (incidentId) => {
     try {
-      // Update incident to mark donation campaign enabled
       await updateDoc(doc(db, "incidents", incidentId), {
         hasDonationCampaign: true,
       });
-
-      // Create a new donation campaign document
       await addDoc(collection(db, "donations"), {
         incidentId,
-        goalAmount: 10000, // default goal amount; can be updated later via UI
+        goalAmount: 10000,
         collectedAmount: 0,
         createdAt: new Date(),
         createdBy: currentUser.uid,
       });
-
-      // Update local state to reflect change
       setReports((prev) =>
         prev.map((r) =>
           r.id === incidentId ? { ...r, hasDonationCampaign: true } : r
         )
       );
     } catch (error) {
-      console.error("Error enabling donation campaign:", error);
+      toast.error("Failed to enable campaign");
     }
   };
 
-  if (!isAdmin)
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, "incidents", id));
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      toast.success("Report deleted");
+      setConfirmDeleteId(null);
+    } catch (error) {
+      toast.error("Error deleting report");
+    }
+  };
+
+  if (!isAdmin) {
     return (
       <Container>
         <p>Access denied. Admins only.</p>
       </Container>
     );
+  }
 
   return (
     <Container>
@@ -140,16 +175,32 @@ const AdminReports = () => {
           </StatusSelect>
 
           {!report.hasDonationCampaign ? (
-            <DonationButton
-              onClick={() => enableDonationCampaign(report.id)}
-            >
+            <Button onClick={() => enableDonationCampaign(report.id)}>
               Enable Donation Campaign
-            </DonationButton>
+            </Button>
           ) : (
             <DonationActiveLabel>Donation Campaign Active</DonationActiveLabel>
           )}
+
+          <Button danger onClick={() => setConfirmDeleteId(report.id)}>
+            Delete Report
+          </Button>
         </ReportCard>
       ))}
+
+      {confirmDeleteId && (
+        <ConfirmOverlay>
+          <ConfirmBox>
+            <p>Are you sure you want to delete this report?</p>
+            <div style={{ marginTop: "1rem" }}>
+              <Button onClick={() => handleDelete(confirmDeleteId)} danger>
+                Yes, Delete
+              </Button>
+              <Button onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+            </div>
+          </ConfirmBox>
+        </ConfirmOverlay>
+      )}
     </Container>
   );
 };

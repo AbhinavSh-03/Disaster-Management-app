@@ -7,6 +7,7 @@ import Navbar from './components/NavBar';
 import MyReports from './components/MyReports';
 import AdminReports from './components/AdminReports';
 import About from './components/About';
+import { Toaster } from 'react-hot-toast';
 import DonationCampaigns from './components/DonationCampaigns'; // new Donations page
 import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -119,6 +120,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="top-right" />
         <AppContent />
       </Router>
     </AuthProvider>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../contexts/AuthContext";
 import styled from "styled-components";
 import { GoogleMap, LoadScript, MarkerF } from "@react-google-maps/api";
+import toast, { Toaster } from "react-hot-toast";
+import { motion } from "framer-motion";
 
 // Styled Components
 const PageWrapper = styled.div`
@@ -30,16 +32,12 @@ const Title = styled.h2`
 
 const ReportCard = styled.div`
   background: white;
-  border: 2px solid rgba(0, 0, 0, 0.08);;
+  border: 2px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
   padding: 1.25rem 1.5rem;
   margin-bottom: 2rem;
-  transition: box-shadow 0.3s ease;
-
-  &:hover {
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  }
+  position: relative;
 `;
 
 const ReportTitle = styled.h3`
@@ -87,39 +85,55 @@ const StatusBadge = styled.span`
   margin-bottom: 0.5rem;
 `;
 
+// Delete button
+const DeleteButton = styled(motion.button)`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: #f44336;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+`;
+
 const MyReports = () => {
   const { currentUser } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!currentUser?.uid) {
-      console.log("No current user.");
-      setReports([]);
-      setLoading(false);
-      return;
-    }
+    if (!currentUser?.uid) return;
 
     const q = query(collection(db, "incidents"), where("userId", "==", currentUser.uid));
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setReports(data);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching reports:", error);
-        setLoading(false);
-      }
-    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setReports(data);
+      setLoading(false);
+    });
 
     return () => unsubscribe();
   }, [currentUser]);
 
+  const handleDelete = async (reportId) => {
+    const confirm = window.confirm("Are you sure you want to delete this report?");
+    if (!confirm) return;
+
+    try {
+      await deleteDoc(doc(db, "incidents", reportId));
+      toast.success("Report deleted successfully");
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast.error("Failed to delete report");
+    }
+  };
+
   return (
     <PageWrapper>
+      <Toaster position="top-right" />
       <Container>
         <Title>My Reports</Title>
         {loading ? (
@@ -149,6 +163,13 @@ const MyReports = () => {
                   </LoadScript>
                 </MapContainer>
               )}
+              <DeleteButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleDelete(report.id)}
+              >
+                Delete
+              </DeleteButton>
             </ReportCard>
           ))
         )}
