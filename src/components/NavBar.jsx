@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../hooks/useNotification";
+import { formatDistanceToNow } from "date-fns";
+import { db } from "../firebaseConfig";
+import { doc, updateDoc } from "firebase/firestore";
 import logoImg from "../assets/logo.jpg";
 
 import {
@@ -14,9 +18,11 @@ import {
   Menu,
   X,
   Heart,
+  Bell,
 } from "lucide-react";
 
-// Styled components
+// Styled Components
+
 const NavBarContainer = styled.nav`
   display: flex;
   justify-content: space-between;
@@ -117,10 +123,75 @@ const Hamburger = styled.button`
   }
 `;
 
-const Navbar = () => {
+const NotificationWrapper = styled.div`
+  position: relative;
+`;
+
+const NotificationIcon = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+`;
+
+const NotificationBadge = styled.span`
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ff3b3b;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 50%;
+`;
+
+const NotificationDropdown = styled.div`
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  z-index: 2000;
+  padding: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+const NotificationItem = styled.div`
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  background-color: ${({ read }) => (read ? "#f9f9f9" : "#e6f4ff")};
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+`;
+
+const NotificationTitle = styled.strong`
+  display: block;
+  color: black;
+`;
+
+const NotificationMessage = styled.p`
+color: black;
+  font-size: 0.85rem;
+  margin: 0.25rem 0;
+`;
+
+const NotificationTime = styled.small`
+  color: #888;
+`;
+
+const Navbar = ({ notifications }) => {
   const { currentUser, userRole, logout } = useAuth();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [localNotifications, setLocalNotifications] = useState([]);
+  const dropdownRef = useRef(null);
+
+  const isActive = (path) => location.pathname === path;
 
   const handleLogout = async () => {
     try {
@@ -130,7 +201,50 @@ const Navbar = () => {
     }
   };
 
-  const isActive = (path) => location.pathname === path;
+  // Initialize localNotifications when props.notifications changes
+  useEffect(() => {
+    setLocalNotifications(notifications);
+  }, [notifications]);
+
+  // Mark unread notifications as read locally when dropdown opens (optimistic update)
+  useEffect(() => {
+    if (showDropdown) {
+      setLocalNotifications((prevNotifs) =>
+        prevNotifs.map((notif) =>
+          notif.read ? notif : { ...notif, read: true }
+        )
+      );
+
+      // Update Firestore for unread notifications asynchronously
+      notifications.forEach(async (n) => {
+        if (!n.read) {
+          try {
+            const notifRef = doc(db, "notifications", n.id);
+            await updateDoc(notifRef, { read: true });
+          } catch (err) {
+            console.error("Error updating notification:", err);
+          }
+        }
+      });
+    }
+  }, [showDropdown, notifications]);
+
+  // Close dropdown if click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Count unread in local state (to update badge immediately)
+  const unreadCount = localNotifications.filter((n) => !n.read).length;
 
   return (
     <NavBarContainer>
@@ -160,7 +274,6 @@ const Navbar = () => {
             My Reports
           </NavLink>
 
-          {/* New Donation Campaigns tab */}
           <NavLink to="/donation-campaigns" active={isActive("/donation-campaigns")}>
             <Heart size={18} />
             Donations
@@ -177,6 +290,39 @@ const Navbar = () => {
             <Info size={18} />
             About
           </NavLink>
+
+          {/* Notification Icon & Dropdown */}
+          <NotificationWrapper ref={dropdownRef}>
+            <NotificationIcon onClick={() => setShowDropdown((prev) => !prev)}>
+              <Bell size={22} />
+              {unreadCount > 0 && <NotificationBadge>{unreadCount}</NotificationBadge>}
+            </NotificationIcon>
+
+            {showDropdown && (
+              <NotificationDropdown>
+                <strong>Notifications</strong>
+                {localNotifications.length === 0 ? (
+                  <p style={{ fontSize: "0.9rem", color: "#666" }}>
+                    No notifications
+                  </p>
+                ) : (
+                  localNotifications.map((n) => (
+                    <NotificationItem key={n.id} read={n.read}>
+                      <NotificationTitle>{n.title}</NotificationTitle>
+                      <NotificationMessage>{n.message}</NotificationMessage>
+                      <NotificationTime>
+                        {n.timestamp?.seconds &&
+                          formatDistanceToNow(
+                            new Date(n.timestamp.seconds * 1000),
+                            { addSuffix: true }
+                          )}
+                      </NotificationTime>
+                    </NotificationItem>
+                  ))
+                )}
+              </NotificationDropdown>
+            )}
+          </NotificationWrapper>
 
           <NavButton onClick={handleLogout}>
             <LogOut size={18} />

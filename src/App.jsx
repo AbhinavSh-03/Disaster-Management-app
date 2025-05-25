@@ -1,24 +1,25 @@
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import './App.css';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import ReportIncident from './components/ReportIncident';
-import Navbar from './components/NavBar';
-import MyReports from './components/MyReports';
-import AdminReports from './components/AdminReports';
-import About from './components/About';
-import { Toaster } from 'react-hot-toast';
-import DonationCampaigns from './components/DonationCampaigns'; // new Donations page
-import Footer from './components/Footer';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation} from "react-router-dom";
+import "./App.css";
+import Login from "./components/Login";
+import Dashboard from "./components/Dashboard";
+import ReportIncident from "./components/ReportIncident";
+import Navbar from "./components/NavBar";
+import MyReports from "./components/MyReports";
+import AdminReports from "./components/AdminReports";
+import About from "./components/About";
+import { Toaster } from "react-hot-toast";
+import DonationCampaigns from "./components/DonationCampaigns";
+import Footer from "./components/Footer";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { useNotifications } from "./hooks/useNotification";
 
 // Wrapper to protect routes for regular users
-function PrivateRoute({ children }) {
+function PrivateRoute({ children, notifications }) {
   const { currentUser } = useAuth();
   return currentUser ? (
     <>
-      <Navbar />
-      <div style={{ paddingTop: '80px' }}>{children}</div>
+      <Navbar notifications={notifications} />
+      <div style={{ paddingTop: "80px" }}>{children}</div>
     </>
   ) : (
     <Navigate to="/login" replace />
@@ -26,12 +27,12 @@ function PrivateRoute({ children }) {
 }
 
 // Wrapper to protect routes for admins
-function AdminRoute({ children }) {
+function AdminRoute({ children, notifications }) {
   const { currentUser, userRole } = useAuth();
   return currentUser && userRole === "admin" ? (
     <>
-      <Navbar />
-      <div style={{ paddingTop: '80px' }}>{children}</div>
+      <Navbar notifications={notifications} />
+      <div style={{ paddingTop: "80px" }}>{children}</div>
     </>
   ) : (
     <Navigate to="/login" replace />
@@ -41,17 +42,17 @@ function AdminRoute({ children }) {
 function AppContent() {
   const location = useLocation();
   const hideFooter = location.pathname === "/login";
+  const { notifications } = useNotifications(); // ✅ Fetch notifications globally
 
   return (
     <>
       <Routes>
         <Route path="/login" element={<Login />} />
 
-        {/* Regular User Routes */}
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
+            <PrivateRoute notifications={notifications}>
               <Dashboard />
             </PrivateRoute>
           }
@@ -60,7 +61,7 @@ function AppContent() {
         <Route
           path="/report"
           element={
-            <PrivateRoute>
+            <PrivateRoute notifications={notifications}>
               <ReportIncident />
             </PrivateRoute>
           }
@@ -69,48 +70,45 @@ function AppContent() {
         <Route
           path="/my-reports"
           element={
-            <PrivateRoute>
+            <PrivateRoute notifications={notifications}>
               <MyReports />
             </PrivateRoute>
           }
         />
 
-        {/* New Donations Route */}
         <Route
           path="/donation-campaigns"
           element={
-            <PrivateRoute>
+            <PrivateRoute notifications={notifications}>
               <DonationCampaigns />
             </PrivateRoute>
           }
         />
 
-        {/* Admin Route */}
         <Route
           path="/admin-reports"
           element={
-            <AdminRoute>
+            <AdminRoute notifications={notifications}>
               <AdminReports />
             </AdminRoute>
           }
         />
 
-        {/* Public Route */}
         <Route
           path="/about"
           element={
             <>
-              <Navbar />
-              <div style={{ paddingTop: '80px' }}>
+              <Navbar notifications={notifications} />
+              <div style={{ paddingTop: "80px" }}>
                 <About />
               </div>
             </>
           }
         />
 
-        {/* Redirect unknown paths to dashboard */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+
       {!hideFooter && <Footer />}
     </>
   );

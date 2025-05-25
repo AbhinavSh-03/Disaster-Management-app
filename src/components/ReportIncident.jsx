@@ -216,6 +216,16 @@ const ReportIncident = () => {
         hasDonationCampaign: false, // New field to track donation eligibility
       });
 
+      // Add notification
+      await addDoc(collection(db, "notifications"), {
+        title: "New Incident Reported",
+        message: `User ${currentUser.email} reported: ${title}`,
+        read: false,
+        timestamp: serverTimestamp(),
+        userId: currentUser.uid,
+        incidentTitle: title,
+      });
+
       setMessage("Incident reported successfully!");
       setTitle("");
       setDescription("");

@@ -32,7 +32,7 @@ const Title = styled.h2`
 
 const ReportCard = styled.div`
   background: white;
-  border: 2px solid rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(4, 71, 68, 0.075);
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
   padding: 1.25rem 1.5rem;
