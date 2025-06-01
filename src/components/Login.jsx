@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import styled from "styled-components";
-import bgImage from "../assets/bg1.jpg";
+import bgImage from "../assets/bg_3.jpg";
 import { googleSignIn } from "../auth"; // Assuming this is your Firebase Google sign-in function
 import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import { useAuth } from "../contexts/AuthContext"; // Import useAuth to access the current user
 
 const Container = styled.div`
+  position: relative;
   background-image: url(${bgImage});
   background-size: cover;
   background-position: center;
@@ -14,10 +15,24 @@ const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(38, 37, 35, 0.8); // darker overlay
+    z-index: 1;
+  }
+
+  > * {
+    position: relative;
+    z-index: 2;
+  }
 `;
 
 const LoginCard = styled.div`
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(6px);
   padding: 3rem;
   border-radius: 20px;
   max-width: 600px;

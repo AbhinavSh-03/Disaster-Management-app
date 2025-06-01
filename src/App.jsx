@@ -12,6 +12,7 @@ import DonationCampaigns from "./components/DonationCampaigns";
 import Footer from "./components/Footer";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useNotifications } from "./hooks/useNotification";
+import { LoadScript } from "@react-google-maps/api";
 
 // Wrapper to protect routes for regular users
 function PrivateRoute({ children, notifications }) {

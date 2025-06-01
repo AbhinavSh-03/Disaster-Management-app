@@ -4,41 +4,26 @@ import { motion } from "framer-motion";
 import { CheckCircle, Hammer, Globe } from "lucide-react";
 
 // Styled Components
-
-
 const Container = styled(motion.div)`
   max-width: 1920px;
-  margin: 0;
   padding: 80px 24px;
   min-height: 100vh;
-  background-color: #f8fafc;
-
+  background-color: #243336;
   background-image: 
-    radial-gradient(
-      circle at top right,
-      rgba(48, 255, 245, 0.25) 0%,
-      rgba(32, 178, 170, 0.15) 20%,
-      rgba(32, 178, 170, 0.05) 40%,
-      transparent 60%
-    ),
-    radial-gradient(
-      circle at bottom left,
-      rgba(32, 178, 170, 0.25) 0%,
-      rgba(32, 178, 170, 0.15) 20%,
-      rgba(32, 178, 170, 0.05) 40%,
-      transparent 60%
-    );
-
-  background-repeat: no-repeat;
-  background-size: 50% 50%, 50% 50%;
-  background-position: top right, bottom left;
+    radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(138, 43, 226, 0.08), transparent 40%);
+  color: white;
+  font-family: "Courier New", monospace;
 `;
 
 const Title = styled(motion.h1)`
   font-size: 3rem;
   font-weight: 800;
-  color: #2563eb;
+  text-align: center;
   margin-bottom: 48px;
+  background: linear-gradient(to right, #3b82f6, #22c55e, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const Grid = styled.div`
@@ -48,19 +33,26 @@ const Grid = styled.div`
 `;
 
 const Card = styled(motion.div)`
-  background: white;
-  border-top: 6px solid ${(props) => props.borderColor || "#ccc"};
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid ${(props) => props.borderColor || "#ccc"};
+  border-left: 5px solid ${(props) => props.borderColor || "#ccc"};
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 15px ${(props) => props.borderColor || "#ccc"}44;
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 25px ${(props) => props.borderColor || "#ccc"}88;
+  }
 `;
 
 const CardTitle = styled.div`
   display: flex;
   align-items: center;
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #ffffff;
   margin-bottom: 12px;
 
   svg {
@@ -69,14 +61,18 @@ const CardTitle = styled.div`
 `;
 
 const CardText = styled.p`
-  color: #4b5563;
+  color: #cbd5e1;
   line-height: 1.6;
 `;
 
 const List = styled.ul`
   padding-left: 20px;
-  color: #4b5563;
+  color: #cbd5e1;
   line-height: 1.6;
+
+  li::marker {
+    color: ${(props) => props.color || "#94a3b8"};
+  }
 `;
 
 const About = () => {
@@ -95,7 +91,6 @@ const About = () => {
       </Title>
 
       <Grid>
-        {/* Project Goal */}
         <Card
           borderColor="#3b82f6"
           initial={{ y: 30, opacity: 0 }}
@@ -112,7 +107,6 @@ const About = () => {
           </CardText>
         </Card>
 
-        {/* Technologies Used */}
         <Card
           borderColor="#22c55e"
           initial={{ y: 30, opacity: 0 }}
@@ -123,17 +117,16 @@ const About = () => {
           <CardTitle>
             <Hammer color="#22c55e" /> Technologies Used
           </CardTitle>
-          <List>
+          <List color="#22c55e">
             <li>React.js (Frontend)</li>
             <li>Firebase Firestore & Auth</li>
             <li>Cloud Functions (Backend)</li>
             <li>Firebase Storage (Images)</li>
-            <li>Stripe API (Donations)</li>
+            <li>Razorpay API (Donations)</li>
             <li>Google Maps API (Locations)</li>
           </List>
         </Card>
 
-        {/* Features */}
         <Card
           borderColor="#a855f7"
           initial={{ y: 30, opacity: 0 }}
@@ -144,12 +137,12 @@ const About = () => {
           <CardTitle>
             <CheckCircle color="#a855f7" /> Available Features
           </CardTitle>
-          <List>
+          <List color="#a855f7">
             <li>User registration & login</li>
             <li>Incident reporting with image & location</li>
             <li>Interactive map for incident location</li>
             <li>Image preview and upload</li>
-            <li>Stripe donation integration</li>
+            <li>Razorpay donation integration</li>
             <li>Optional admin approval</li>
           </List>
         </Card>

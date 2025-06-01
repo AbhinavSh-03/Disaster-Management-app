@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../contexts/AuthContext";
 import styled from "styled-components";
@@ -85,7 +92,6 @@ const StatusBadge = styled.span`
   margin-bottom: 0.5rem;
 `;
 
-// Delete button
 const DeleteButton = styled(motion.button)`
   position: absolute;
   top: 12px;
@@ -99,6 +105,32 @@ const DeleteButton = styled(motion.button)`
   cursor: pointer;
 `;
 
+// MapWrapper component WITHOUT LoadScript
+const MapWrapper = ({ location }) => {
+  const mapRef = useRef(null);
+
+  const handleMapLoad = (map) => {
+    mapRef.current = map;
+    setTimeout(() => {
+      window.google.maps.event.trigger(map, "resize");
+    }, 250);
+  };
+
+  return (
+    <MapContainer>
+      <GoogleMap
+        mapContainerStyle={{ width: "100%", height: "100%" }}
+        center={location}
+        zoom={10}
+        onLoad={handleMapLoad}
+        options={{ mapTypeControl: false, streetViewControl: false }}
+      >
+        <MarkerF position={location} />
+      </GoogleMap>
+    </MapContainer>
+  );
+};
+
 const MyReports = () => {
   const { currentUser } = useAuth();
   const [reports, setReports] = useState([]);
@@ -110,7 +142,10 @@ const MyReports = () => {
     const q = query(collection(db, "incidents"), where("userId", "==", currentUser.uid));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setReports(data);
       setLoading(false);
     });
@@ -136,43 +171,32 @@ const MyReports = () => {
       <Toaster position="top-right" />
       <Container>
         <Title>My Reports</Title>
-        {loading ? (
-          <p>Loading reports...</p>
-        ) : reports.length === 0 ? (
-          <p>No reports submitted yet.</p>
-        ) : (
-          reports.map((report) => (
-            <ReportCard key={report.id}>
-              <ReportTitle>{report.title}</ReportTitle>
-              <StatusBadge status={report.status || "Pending"}>
-                {report.status || "Pending"}
-              </StatusBadge>
-              <Description>{report.description}</Description>
-              {report.imageUrl && <ImagePreview src={report.imageUrl} alt="Incident" />}
-              {report.location && (
-                <MapContainer>
-                  <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-                    <GoogleMap
-                      mapContainerStyle={{ width: "100%", height: "100%" }}
-                      center={report.location}
-                      zoom={10}
-                      options={{ mapTypeControl: false, streetViewControl: false }}
-                    >
-                      <MarkerF position={report.location} />
-                    </GoogleMap>
-                  </LoadScript>
-                </MapContainer>
-              )}
-              <DeleteButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleDelete(report.id)}
-              >
-                Delete
-              </DeleteButton>
-            </ReportCard>
-          ))
-        )}
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+          {loading ? (
+            <p>Loading reports...</p>
+          ) : reports.length === 0 ? (
+            <p>No reports submitted yet.</p>
+          ) : (
+            reports.map((report) => (
+              <ReportCard key={report.id}>
+                <ReportTitle>{report.title}</ReportTitle>
+                <StatusBadge status={report.status || "Pending"}>
+                  {report.status || "Pending"}
+                </StatusBadge>
+                <Description>{report.description}</Description>
+                {report.imageUrl && <ImagePreview src={report.imageUrl} alt="Incident" />}
+                {report.location && <MapWrapper location={report.location} />}
+                <DeleteButton
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleDelete(report.id)}
+                >
+                  Delete
+                </DeleteButton>
+              </ReportCard>
+            ))
+          )}
+        </LoadScript>
       </Container>
     </PageWrapper>
   );
