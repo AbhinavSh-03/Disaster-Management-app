@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, Hammer, Globe, LogIn, MapPin, UploadCloud, DollarSign, ShieldCheck } from "lucide-react";
 
 const PageWrapper = styled.div`
-  background: linear-gradient(135deg,rgb(215, 247, 252) 0%, #ccfbf1 100%);
+  background: linear-gradient(135deg,rgb(91, 218, 238) 0%, #ccfbf1 100%);
   padding: 60px 20px;
   min-height: 100vh;
   display: flex;
