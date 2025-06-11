@@ -1,12 +1,69 @@
-# React + Vite
+# 🌍 Crowd-Sourced Disaster Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive web app built with React + Firebase that empowers users to report disasters in real-time. Users can submit incident reports with descriptions, locations, and images—helping authorities and volunteers make timely, informed decisions. Admins can moderate reports, and donation campaigns can be associated with verified incidents.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- 📍 **Geolocation-based Reporting**
+- 🗺️ **Interactive Google Map with Marker Selection**
+- 🖼️ **Optional Image Upload (Firebase Storage)**
+- 🔐 **Authentication using Firebase Auth**
+- 🗃️ **Firestore Database for Reports & Notifications**
+- 🛠️ **Admin Dashboard for Report Moderation**
+- 💳 **Donation Integration via Razorpay**
+- 🔔 **Real-time Notification System**
+- 📱 **Mobile-Responsive UI**
+- 🌐 **Deployed using Firebase Hosting**
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🛠️ Tech Stack
+
+| Layer       | Technology                                   |
+|-------------|-----------------------------------------------|
+| Frontend    | React.js, Vite, Styled-Components             |
+| Backend     | Firebase Cloud Functions                      |
+| Database    | Firebase Firestore                            |
+| Auth        | Firebase Authentication                       |
+| Storage     | Firebase Storage                              |
+| Maps        | Google Maps JavaScript API                    |
+| Payments    | Razorpay API                                  |
+| Deployment  | Firebase Hosting                              |
+| Version Control | Git & GitHub                              |
+
+---
+
+
+## ⚙️ Setup Instructions
+
+### Prerequisites
+
+- Node.js (v18 or later recommended)
+- Firebase CLI (`npm install -g firebase-tools`)
+- Google Maps API key
+- Razorpay key (if payment integration is active)
+
+---
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/disaster-management-system.git
+cd disaster-management-system
+
+# Add environment variables
+touch .env
+
+# Sample .env file:
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+# Run the app in development
+npm run dev
+
+# Install dependencies
+npm install
+
+
