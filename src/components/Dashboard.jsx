@@ -167,7 +167,7 @@ const Dashboard = () => {
               mapContainerStyle={{ width: "100%", height: "100%", minHeight: "450px" }}
               center={center}
               zoom={zoom}
-              options={{ streetViewControl: false, mapTypeControl: false }}
+              options={{ streetViewControl: false, mapTypeControl: false,  gestureHandling: "greedy"}}
             >
               {incidents.map((incident) => (
                 <MarkerF

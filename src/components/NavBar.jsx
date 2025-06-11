@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
-import { useNotifications } from "../hooks/useNotification";
 import { formatDistanceToNow } from "date-fns";
 import { db } from "../firebaseConfig";
 import { doc, updateDoc } from "firebase/firestore";
 import logoImg from "../assets/logo.jpg";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   LayoutDashboard,
@@ -57,23 +57,25 @@ const LogoText = styled.span`
   color: #0077cc;
 `;
 
-const NavLinks = styled.div`
+const NavLinks = styled(motion.div)`
   display: flex;
   align-items: center;
   gap: 1.5rem;
 
   @media (max-width: 768px) {
-    position: absolute;
-    top: 70px;
-    right: ${({ open }) => (open ? "0" : "-100%")};
-    flex-direction: column;
-    background: #ffffff;
-    width: 200px;
-    padding: 1rem;
-    border-left: 1px solid #ddd;
-    transition: right 0.3s ease;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05);
-  }
+  position: absolute;
+  top: 70px;
+  right: ${({ open }) => (open ? "0" : "-100%")};
+  flex-direction: column;
+  background: #ffffff;
+  width: 200px;                        // ✅ only 200px wide now
+  padding: 1rem;
+  border-left: 1px solid #ddd;
+  transition: right 0.3s ease;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05);
+  text-align: left;
+  align-items: flex-start;
+}
 `;
 
 const NavLink = styled(Link)`
@@ -84,10 +86,11 @@ const NavLink = styled(Link)`
   text-decoration: none;
   font-weight: 500;
   font-size: 1rem;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
 
   &:hover {
     color: #0077cc;
+    transform: scale(1.02);
   }
 `;
 
@@ -129,6 +132,7 @@ const NotificationWrapper = styled.div`
 
 const NotificationIcon = styled.button`
   background: none;
+  color: black;
   border: none;
   cursor: pointer;
   position: relative;
@@ -174,7 +178,7 @@ const NotificationTitle = styled.strong`
 `;
 
 const NotificationMessage = styled.p`
-color: black;
+  color: black;
   font-size: 0.85rem;
   margin: 0.25rem 0;
 `;
@@ -201,12 +205,14 @@ const Navbar = ({ notifications }) => {
     }
   };
 
-  // Initialize localNotifications when props.notifications changes
+  const handleNavClick = () => {
+    if (menuOpen) setMenuOpen(false);
+  };
+
   useEffect(() => {
     setLocalNotifications(notifications);
   }, [notifications]);
 
-  // Mark unread notifications as read locally when dropdown opens (optimistic update)
   useEffect(() => {
     if (showDropdown) {
       setLocalNotifications((prevNotifs) =>
@@ -215,7 +221,6 @@ const Navbar = ({ notifications }) => {
         )
       );
 
-      // Update Firestore for unread notifications asynchronously
       notifications.forEach(async (n) => {
         if (!n.read) {
           try {
@@ -229,7 +234,6 @@ const Navbar = ({ notifications }) => {
     }
   }, [showDropdown, notifications]);
 
-  // Close dropdown if click outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -240,10 +244,10 @@ const Navbar = ({ notifications }) => {
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Count unread in local state (to update badge immediately)
   const unreadCount = localNotifications.filter((n) => !n.read).length;
 
   return (
@@ -258,77 +262,87 @@ const Navbar = ({ notifications }) => {
       </Hamburger>
 
       {currentUser && (
-        <NavLinks open={menuOpen}>
-          <NavLink to="/dashboard" active={isActive("/dashboard")}>
-            <LayoutDashboard size={18} />
-            Dashboard
-          </NavLink>
+        <AnimatePresence>
+          {menuOpen || window.innerWidth > 768 ? (
+            <NavLinks
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 30 }}
+              transition={{ duration: 0.3 }}
+              open={menuOpen}
+            >
+              <NavLink to="/dashboard" active={isActive("/dashboard")} onClick={handleNavClick}>
+                <LayoutDashboard size={18} />
+                Dashboard
+              </NavLink>
 
-          <NavLink to="/report" active={isActive("/report")}>
-            <FilePlus size={18} />
-            Report Incident
-          </NavLink>
+              <NavLink to="/report" active={isActive("/report")} onClick={handleNavClick}>
+                <FilePlus size={18} />
+                Report Incident
+              </NavLink>
 
-          <NavLink to="/my-reports" active={isActive("/my-reports")}>
-            <ListChecks size={18} />
-            My Reports
-          </NavLink>
+              <NavLink to="/my-reports" active={isActive("/my-reports")} onClick={handleNavClick}>
+                <ListChecks size={18} />
+                My Reports
+              </NavLink>
 
-          <NavLink to="/donation-campaigns" active={isActive("/donation-campaigns")}>
-            <Heart size={18} />
-            Donations
-          </NavLink>
+              <NavLink to="/donation-campaigns" active={isActive("/donation-campaigns")} onClick={handleNavClick}>
+                <Heart size={18} />
+                Donations
+              </NavLink>
 
-          {userRole === "admin" && (
-            <NavLink to="/admin-reports" active={isActive("/admin-reports")}>
-              <ShieldCheck size={18} />
-              Admin Control
-            </NavLink>
-          )}
+              {userRole === "admin" && (
+                <NavLink to="/admin-reports" active={isActive("/admin-reports")} onClick={handleNavClick}>
+                  <ShieldCheck size={18} />
+                  Admin Control
+                </NavLink>
+              )}
 
-          <NavLink to="/about" active={isActive("/about")}>
-            <Info size={18} />
-            About
-          </NavLink>
+              <NavLink to="/about" active={isActive("/about")} onClick={handleNavClick}>
+                <Info size={18} />
+                About
+              </NavLink>
 
-          {/* Notification Icon & Dropdown */}
-          <NotificationWrapper ref={dropdownRef}>
-            <NotificationIcon onClick={() => setShowDropdown((prev) => !prev)}>
-              <Bell size={22} />
-              {unreadCount > 0 && <NotificationBadge>{unreadCount}</NotificationBadge>}
-            </NotificationIcon>
+              {/* Notification Icon */}
+              <NotificationWrapper ref={dropdownRef}>
+                <NotificationIcon onClick={() => setShowDropdown((prev) => !prev)}>
+                  <Bell size={22} />
+                  {unreadCount > 0 && <NotificationBadge>{unreadCount}</NotificationBadge>}
+                </NotificationIcon>
 
-            {showDropdown && (
-              <NotificationDropdown>
-                <strong>Notifications</strong>
-                {localNotifications.length === 0 ? (
-                  <p style={{ fontSize: "0.9rem", color: "#666" }}>
-                    No notifications
-                  </p>
-                ) : (
-                  localNotifications.map((n) => (
-                    <NotificationItem key={n.id} read={n.read}>
-                      <NotificationTitle>{n.title}</NotificationTitle>
-                      <NotificationMessage>{n.message}</NotificationMessage>
-                      <NotificationTime>
-                        {n.timestamp?.seconds &&
-                          formatDistanceToNow(
-                            new Date(n.timestamp.seconds * 1000),
-                            { addSuffix: true }
-                          )}
-                      </NotificationTime>
-                    </NotificationItem>
-                  ))
+                {showDropdown && (
+                  <NotificationDropdown>
+                    <strong>Notifications</strong>
+                    {localNotifications.length === 0 ? (
+                      <p style={{ fontSize: "0.9rem", color: "#666" }}>
+                        No notifications
+                      </p>
+                    ) : (
+                      localNotifications.map((n) => (
+                        <NotificationItem key={n.id} read={n.read}>
+                          <NotificationTitle>{n.title}</NotificationTitle>
+                          <NotificationMessage>{n.message}</NotificationMessage>
+                          <NotificationTime>
+                            {n.timestamp?.seconds &&
+                              formatDistanceToNow(
+                                new Date(n.timestamp.seconds * 1000),
+                                { addSuffix: true }
+                              )}
+                          </NotificationTime>
+                        </NotificationItem>
+                      ))
+                    )}
+                  </NotificationDropdown>
                 )}
-              </NotificationDropdown>
-            )}
-          </NotificationWrapper>
+              </NotificationWrapper>
 
-          <NavButton onClick={handleLogout}>
-            <LogOut size={18} />
-            Logout
-          </NavButton>
-        </NavLinks>
+              <NavButton onClick={handleLogout}>
+                <LogOut size={18} />
+                Logout
+              </NavButton>
+            </NavLinks>
+          ) : null}
+        </AnimatePresence>
       )}
     </NavBarContainer>
   );

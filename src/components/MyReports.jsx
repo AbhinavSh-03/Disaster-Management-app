@@ -123,7 +123,7 @@ const MapWrapper = ({ location }) => {
         center={location}
         zoom={10}
         onLoad={handleMapLoad}
-        options={{ mapTypeControl: false, streetViewControl: false }}
+        options={{ mapTypeControl: false, streetViewControl: false, gestureHandling: "greedy" }}
       >
         <MarkerF position={location} />
       </GoogleMap>
