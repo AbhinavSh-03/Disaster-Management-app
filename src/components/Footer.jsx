@@ -13,7 +13,7 @@ const FooterContainer = styled.footer`
   color: white;
   padding: 3rem 1.5rem;
   text-align: center;
-  height: 250px;
+  height: 229px !important;
   display: flex;
   align-items: center;
 `;
@@ -24,7 +24,7 @@ const FooterContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.55rem;
 `;
 
 const SocialIcons = styled.div`

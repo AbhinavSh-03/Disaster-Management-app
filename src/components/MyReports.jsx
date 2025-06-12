@@ -43,6 +43,7 @@ const ReportCard = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
   padding: 1.25rem 1.5rem;
+  padding-top: 2.5rem; // Add extra top padding to avoid overlap
   margin-bottom: 2rem;
   position: relative;
 `;

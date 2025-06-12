@@ -8,33 +8,40 @@ import { collection, getDocs } from "firebase/firestore";
 const Container = styled.div`
   display: flex;
   padding: 20px;
-  height: calc(100vh - 80px);
+  
   box-sizing: border-box;
   flex-direction: row;
   background: linear-gradient(to left, #b2dfdb 0%, #e0f2f1 40%, #ffffff 100%);
+  flex-wrap: wrap;
 
   @media (max-width: 768px) {
     flex-direction: column;
-    height: auto;
     padding: 15px 10px;
   }
 `;
 
+
 const MapWrapper = styled.div`
   flex: 3;
-  height: 650px;
+  height: 100%;
+  min-height: 650px;
+  max-height: 650px;
   border-radius: 12px;
   overflow: hidden;
-  
   margin-right: 20px;
   box-shadow: 0 6px 15px rgba(46, 139, 87, 0.3);
   border: 1px solid #d1e7dd;
 
   @media (max-width: 768px) {
-    height: 300px;
+    height: 550px !important;
+    min-height: 550px !important;
+    max-height: 550px !important;
     width: 100%;
+    margin-right: 0;
   }
 `;
+
+
 
 const Sidebar = styled.div`
   flex: 1;
@@ -164,7 +171,7 @@ const Dashboard = () => {
         <MapWrapper>
           <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
             <GoogleMap
-              mapContainerStyle={{ width: "100%", height: "100%", minHeight: "450px" }}
+              mapContainerStyle={{ width: "100%", height: "100%", minHeight: "650px" }}
               center={center}
               zoom={zoom}
               options={{ streetViewControl: false, mapTypeControl: false,  gestureHandling: "greedy"}}
